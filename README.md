@@ -1,2 +1,4 @@
 # Reado
-ViViVy
+by ViViVy
+
+Reading helper mobile app for visually impaired people
