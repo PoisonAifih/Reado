@@ -10,6 +10,8 @@ lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
 composeBom = "2024.09.00"
 textRecognition = "16.0.1"
+languageId = "17.0.6"
+languageIdCommon = "16.1.0"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -31,6 +33,8 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
+mlkit-language-id = { module = "com.google.mlkit:language-id", version.ref = "languageId" }
+language-id-common = { group = "com.google.mlkit", name = "language-id-common", version.ref = "languageIdCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

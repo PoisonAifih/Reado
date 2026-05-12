@@ -21,7 +21,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -39,11 +41,35 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
+
+    companion object {
+        private const val HELP_READ_ALOUD =
+            "Panduan gestur Reado. Ketuk satu kali untuk jeda, yaitu memutar kata jeda. " +
+                "Ketuk dua kali untuk memindai teks di depan kamera dan membacanya dengan bahasa yang dideteksi otomatis. " +
+                "Tekan lama untuk mendengar persentase baterai. " +
+                "Usap lurus ke kanan untuk membaca blok teks berikutnya. " +
+                "Usap lurus ke kiri untuk blok teks sebelumnya. " +
+                "Usap lurus ke atas untuk menaikkan volume. " +
+                "Usap lurus ke bawah untuk menurunkan volume. " +
+                "Gambar huruf L: usap ke bawah lalu ke kanan tanpa mengangkat jari untuk mengulangi teks terakhir yang dibaca. " +
+                "Tombol bantuan di pojok kanan atas menampilkan daftar gestur ini."
+
+        private val HELP_BODY =
+            """
+            Ketuk 1x — Jeda (memutar ucapan "Jeda")
+            Ketuk 2x — Pindai kamera & baca teks (bahasa suara mengikuti teks)
+            Tekan lama — Baca persen baterai
+            Usap kanan — Teks berikutnya (urutan blok)
+            Usap kiri — Teks sebelumnya
+            Usap atas — Volume naik
+            Usap bawah — Volume turun
+            Huruf L (bawah lalu kanan) — Ulangi teks terakhir
+            """.trimIndent()
+    }
 
     private lateinit var tts: TextToSpeech
     private lateinit var cameraManager: CameraManager
@@ -55,8 +81,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private var currentTextIndex by mutableStateOf(-1)
     private var lastSpokenText: String = ""
 
+    @Volatile
+    private var ttsReady = false
+
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) speak("Aplikasi Siap") else speak("Izin kamera diperlukan")
+        if (isGranted) speakUi("Aplikasi Siap") else speakUi("Izin kamera diperlukan")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,6 +102,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         setContent {
             MaterialTheme {
                 var showAccDialog by remember { mutableStateOf(!isAccessibilityServiceEnabled(this@MainActivity)) }
+                var showHelp by remember { mutableStateOf(false) }
+
+                LaunchedEffect(showHelp) {
+                    if (showHelp) {
+                        speakUi(HELP_READ_ALOUD, saveInHistory = false)
+                    }
+                }
 
                 Box(
                     modifier = Modifier
@@ -91,6 +127,34 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     }
 
                     GesturePad(modifier = Modifier.fillMaxSize())
+
+                    TextButton(
+                        onClick = { showHelp = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Text("Bantuan", color = Color.White)
+                    }
+
+                    if (showHelp) {
+                        val scroll = rememberScrollState()
+                        AlertDialog(
+                            onDismissRequest = { showHelp = false },
+                            title = { Text("Gestur Reado") },
+                            text = {
+                                Text(
+                                    text = HELP_BODY,
+                                    modifier = Modifier.verticalScroll(scroll)
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showHelp = false }) {
+                                    Text("Tutup")
+                                }
+                            }
+                        )
+                    }
 
                     if (showAccDialog) {
                         AlertDialog(
@@ -139,11 +203,30 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
     }
 
-    private fun speak(text: String, saveInHistory: Boolean = true) {
+    private fun speakUi(text: String, saveInHistory: Boolean = true) {
+        if (!ttsReady) return
+        runOnUiThread {
+            if (isFinishing) return@runOnUiThread
+            TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
+            if (saveInHistory) {
+                lastSpokenText = text
+            }
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
+
+    private fun speakDetectedText(text: String, saveInHistory: Boolean = true) {
+        if (!ttsReady) return
         if (saveInHistory) {
             lastSpokenText = text
         }
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        TtsLanguageHelper.identifyLocaleForText(text) { loc ->
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                TtsLanguageHelper.applyLocaleToTts(tts, loc)
+                tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+            }
+        }
     }
 
     @Composable
@@ -214,9 +297,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 .background(Color.Transparent)
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = { speak("Jeda", saveInHistory = false) },
+                        onTap = { speakUi("Jeda", saveInHistory = false) },
                         onDoubleTap = {
-                            speak("Memindai", saveInHistory = false)
+                            speakUi("Memindai", saveInHistory = false)
                             cameraManager.capturePhoto(
                                 onImageReady = { inputImage, correctSize, imageProxy ->
                                     capturedImageSize = correctSize
@@ -309,21 +392,21 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
                                             if (smartResults.isEmpty()) {
                                                 currentTextIndex = -1
-                                                speak("Tidak ada teks utama ditemukan", saveInHistory = false)
+                                                speakUi("Tidak ada teks utama ditemukan", saveInHistory = false)
                                             } else {
                                                 currentTextIndex = 0
-                                                speak(smartResults[0].text) // Instantly read Center text
+                                                speakDetectedText(smartResults[0].text)
                                             }
                                         },
                                         onComplete = { imageProxy.close() }
                                     )
                                 },
-                                onError = { speak("Kamera error", saveInHistory = false) }
+                                onError = { speakUi("Kamera error", saveInHistory = false) }
                             )
                         },
                         onLongPress = {
                             val battery = getBatteryPercentage()
-                            speak("Baterai $battery persen", saveInHistory = false)
+                            speakUi("Baterai $battery persen", saveInHistory = false)
                         }
                     )
                 }
@@ -341,16 +424,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                 // --- L SHAPE: REPEAT ---
                                 "DOWN_RIGHT" -> {
                                     if (lastSpokenText.isNotEmpty()) {
-                                        speak(lastSpokenText, saveInHistory = false)
+                                        speakDetectedText(lastSpokenText, saveInHistory = false)
                                     } else {
-                                        speak("Belum ada teks untuk diulang", saveInHistory = false)
+                                        speakUi("Belum ada teks untuk diulang", saveInHistory = false)
                                     }
                                 }
                                 // --- STRAIGHT RIGHT: NEXT TEXT ---
                                 "RIGHT" -> {
                                     if (ocrResults.isNotEmpty()) {
                                         currentTextIndex = (currentTextIndex + 1) % ocrResults.size
-                                        speak(ocrResults[currentTextIndex].text)
+                                        speakDetectedText(ocrResults[currentTextIndex].text)
                                     }
                                 }
                                 // --- STRAIGHT LEFT: PREVIOUS TEXT ---
@@ -358,18 +441,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                     if (ocrResults.isNotEmpty()) {
                                         // The math smoothly wraps backward to the end of the array (Top Right)
                                         currentTextIndex = (currentTextIndex - 1 + ocrResults.size) % ocrResults.size
-                                        speak(ocrResults[currentTextIndex].text)
+                                        speakDetectedText(ocrResults[currentTextIndex].text)
                                     }
                                 }
                                 // --- STRAIGHT UP: VOLUME UP ---
                                 "UP" -> {
                                     adjustVolume(raise = true)
-                                    speak("Volume naik", saveInHistory = false)
+                                    speakUi("Volume naik", saveInHistory = false)
                                 }
                                 // --- STRAIGHT DOWN: VOLUME DOWN ---
                                 "DOWN" -> {
                                     adjustVolume(raise = false)
-                                    speak("Volume turun", saveInHistory = false)
+                                    speakUi("Volume turun", saveInHistory = false)
                                 }
                                 else -> {
                                     Log.d("Gesture", "Unknown shape: $shapeDrawn")
@@ -405,18 +488,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val locale = Locale("id", "ID")
-            val result = tts.setLanguage(locale)
-
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tts.language = Locale.US
-            } else {
-                speak("Reado Siap")
-            }
+            TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
+            ttsReady = true
+            speakUi("Reado Siap")
         }
     }
 
     override fun onDestroy() {
+        ttsReady = false
         tts.shutdown()
         super.onDestroy()
     }

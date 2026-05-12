@@ -2,16 +2,18 @@ package com.vivivy.reado
 
 import android.accessibilityservice.AccessibilityButtonController
 import android.accessibilityservice.AccessibilityService
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import java.util.Locale
 
 class AccService : AccessibilityService(), TextToSpeech.OnInitListener {
 
     private lateinit var tts: TextToSpeech
     private var isTtsReady = false
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private var buttonCallback: AccessibilityButtonController.AccessibilityButtonCallback? = null
 
@@ -34,19 +36,27 @@ class AccService : AccessibilityService(), TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val result = tts.setLanguage(Locale("id", "ID"))
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tts.language = Locale.US
-            } else {
-                isTtsReady = true
-                speak("Layanan pembaca layar Reado aktif")
-            }
+            TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
+            isTtsReady = true
+            speakUi("Layanan pembaca layar Reado aktif")
         }
     }
 
-    private fun speak(text: String) {
-        if (isTtsReady) {
+    private fun speakUi(text: String) {
+        if (!isTtsReady) return
+        mainHandler.post {
+            TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
+
+    private fun speakScreenContent(text: String) {
+        if (!isTtsReady) return
+        TtsLanguageHelper.identifyLocaleForText(text) { loc ->
+            mainHandler.post {
+                TtsLanguageHelper.applyLocaleToTts(tts, loc)
+                tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+            }
         }
     }
 
@@ -63,9 +73,9 @@ class AccService : AccessibilityService(), TextToSpeech.OnInitListener {
         Log.d("ReadoService", "Screen Text Found: $finalResult")
 
         if (finalResult.isNotBlank()) {
-            speak(finalResult)
+            speakScreenContent(finalResult)
         } else {
-            speak("Tidak ada teks di layar")
+            speakUi("Tidak ada teks di layar")
         }
     }
 
@@ -87,6 +97,7 @@ class AccService : AccessibilityService(), TextToSpeech.OnInitListener {
         buttonCallback?.let {
             accessibilityButtonController.unregisterAccessibilityButtonCallback(it)
         }
+        isTtsReady = false
         if (::tts.isInitialized) tts.shutdown()
         super.onDestroy()
     }
