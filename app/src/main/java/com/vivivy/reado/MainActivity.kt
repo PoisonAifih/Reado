@@ -48,11 +48,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     companion object {
         private const val HELP_READ_ALOUD =
-            "Panduan gestur Reado. Ketuk satu kali untuk jeda, yaitu memutar kata jeda. " +
-                "Ketuk dua kali untuk memindai teks di depan kamera dan membacanya dengan bahasa yang dideteksi otomatis. " +
+            "Panduan gestur Reado. Ketuk satu kali untuk jeda bacaan. " +
+                "Ketuk dua kali untuk memindai teks di depan kamera dan membaca semua teks sekaligus dari atas ke bawah, mendahulukan judul dan teks berukuran besar. " +
                 "Tekan lama untuk mendengar persentase baterai. " +
-                "Usap lurus ke kanan untuk membaca blok teks berikutnya. " +
-                "Usap lurus ke kiri untuk blok teks sebelumnya. " +
                 "Usap lurus ke atas untuk menaikkan volume. " +
                 "Usap lurus ke bawah untuk menurunkan volume. " +
                 "Gambar huruf L: usap ke bawah lalu ke kanan tanpa mengangkat jari untuk mengulangi teks terakhir yang dibaca. " +
@@ -60,11 +58,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         private val HELP_BODY =
             """
-            Ketuk 1x — Jeda (memutar ucapan "Jeda")
-            Ketuk 2x — Pindai kamera & baca teks (bahasa suara mengikuti teks)
+            Ketuk 1x — Jeda bacaan
+            Ketuk 2x — Pindai & baca semua teks sekaligus (judul besar dibaca duluan, lalu atas ke bawah)
             Tekan lama — Baca persen baterai
-            Usap kanan — Teks berikutnya (urutan blok)
-            Usap kiri — Teks sebelumnya
             Usap atas — Volume naik
             Usap bawah — Volume turun
             Huruf L (bawah lalu kanan) — Ulangi teks terakhir
@@ -77,8 +73,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private var ocrResults by mutableStateOf<List<ScanResult>>(emptyList())
     private var capturedImageSize by mutableStateOf(Size.Zero)
-
-    private var currentTextIndex by mutableStateOf(-1)
     private var lastSpokenText: String = ""
 
     @Volatile
@@ -255,6 +249,28 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     @Composable
     fun ResultOverlay() {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            // Scan zone corner markers — shows where OCR will focus
+            val zoneLeft   = size.width  * 0.10f
+            val zoneTop    = size.height * 0.15f
+            val zoneRight  = size.width  * 0.90f
+            val zoneBottom = size.height * 0.85f
+            val cornerLen  = 50f
+            val guideColor = Color.White.copy(alpha = 0.85f)
+            val strokeW    = 5f
+
+            // Top-left
+            drawLine(guideColor, Offset(zoneLeft, zoneTop + cornerLen), Offset(zoneLeft, zoneTop), strokeWidth = strokeW)
+            drawLine(guideColor, Offset(zoneLeft, zoneTop), Offset(zoneLeft + cornerLen, zoneTop), strokeWidth = strokeW)
+            // Top-right
+            drawLine(guideColor, Offset(zoneRight - cornerLen, zoneTop), Offset(zoneRight, zoneTop), strokeWidth = strokeW)
+            drawLine(guideColor, Offset(zoneRight, zoneTop), Offset(zoneRight, zoneTop + cornerLen), strokeWidth = strokeW)
+            // Bottom-left
+            drawLine(guideColor, Offset(zoneLeft, zoneBottom - cornerLen), Offset(zoneLeft, zoneBottom), strokeWidth = strokeW)
+            drawLine(guideColor, Offset(zoneLeft, zoneBottom), Offset(zoneLeft + cornerLen, zoneBottom), strokeWidth = strokeW)
+            // Bottom-right
+            drawLine(guideColor, Offset(zoneRight - cornerLen, zoneBottom), Offset(zoneRight, zoneBottom), strokeWidth = strokeW)
+            drawLine(guideColor, Offset(zoneRight, zoneBottom), Offset(zoneRight, zoneBottom - cornerLen), strokeWidth = strokeW)
+
             if (capturedImageSize == Size.Zero || ocrResults.isEmpty()) return@Canvas
 
             val scaleX = size.width / capturedImageSize.width
@@ -266,20 +282,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             val offsetX = (size.width - scaledWidth) / 2f
             val offsetY = (size.height - scaledHeight) / 2f
 
-            ocrResults.forEachIndexed { index, result ->
+            ocrResults.forEach { result ->
                 val left = result.rect.left * scale + offsetX
                 val top = result.rect.top * scale + offsetY
                 val right = result.rect.right * scale + offsetX
                 val bottom = result.rect.bottom * scale + offsetY
 
-                val boxColor = if (index == currentTextIndex) Color.Green else Color.Cyan
-                val strokeWidth = if (index == currentTextIndex) 12f else 6f
-
                 drawRect(
-                    color = boxColor,
+                    color = Color.Cyan,
                     topLeft = Offset(left, top),
                     size = Size(right - left, bottom - top),
-                    style = Stroke(width = strokeWidth)
+                    style = Stroke(width = 6f)
                 )
             }
         }
@@ -319,6 +332,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                                 if (used[i]) continue
                                                 val currentRect = RectF(rawResults[i].rect)
                                                 var currentText = rawResults[i].text
+                                                var currentFontSize = rawResults[i].estimatedFontSize
                                                 used[i] = true
 
                                                 var mergedAny = true
@@ -340,62 +354,68 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                                                 currentText = currentText + " " + rawResults[j].text
                                                             }
                                                             currentRect.union(otherRect)
+                                                            currentFontSize = max(currentFontSize, rawResults[j].estimatedFontSize)
                                                             used[j] = true
                                                             mergedAny = true
                                                         }
                                                     }
                                                 }
-                                                mergedResults.add(ScanResult(currentText, currentRect))
+                                                mergedResults.add(ScanResult(currentText, currentRect, currentFontSize))
                                             }
 
                                             // --- 2. FILTERING LOGIC ---
-                                            val imgCenterX = correctSize.width / 2f
-                                            val imgCenterY = correctSize.height / 2f
-                                            val totalArea = correctSize.width * correctSize.height
+                                            val imgWidth  = correctSize.width
+                                            val imgHeight = correctSize.height
+                                            val totalArea = imgWidth * imgHeight
+
+                                            // Scan zone: middle 80% horizontally, middle 70% vertically
+                                            val zoneLeft   = imgWidth  * 0.10f
+                                            val zoneRight  = imgWidth  * 0.90f
+                                            val zoneTop    = imgHeight * 0.15f
+                                            val zoneBottom = imgHeight * 0.85f
+
+                                            // Minimum font height to exclude small background text
+                                            val minFontSize = imgHeight * 0.018f
 
                                             val bigResults = mergedResults.filter { result ->
                                                 val area = result.rect.width() * result.rect.height()
-                                                area > (totalArea * 0.005f) // Ignore tiny noise
+                                                if (area <= totalArea * 0.005f) return@filter false
+
+                                                // Block center must be within the scan zone
+                                                val cx = result.rect.centerX()
+                                                val cy = result.rect.centerY()
+                                                if (cx < zoneLeft || cx > zoneRight || cy < zoneTop || cy > zoneBottom) return@filter false
+
+                                                // Ignore small background text
+                                                result.estimatedFontSize >= minFontSize
                                             }
 
-                                            val smartResults = mutableListOf<ScanResult>()
+                                            // --- 3. SMART READING ORDER ---
+                                            // Titles (large font) read first, then body text top-to-bottom
+                                            val smartResults = if (bigResults.isNotEmpty()) {
+                                                val maxFontSize = bigResults.maxOf { it.estimatedFontSize }
+                                                val titleThreshold = maxFontSize * 0.65f
 
-                                            // --- 3. QUADRANT SORTING LOGIC ---
-                                            if (bigResults.isNotEmpty()) {
-                                                // Find the absolute center item
-                                                val centerItem = bigResults.minByOrNull {
-                                                    val dx = it.rect.centerX() - imgCenterX
-                                                    val dy = it.rect.centerY() - imgCenterY
-                                                    (dx * dx) + (dy * dy)
-                                                }!!
+                                                val titleBlocks = bigResults
+                                                    .filter { it.estimatedFontSize >= titleThreshold }
+                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
 
-                                                smartResults.add(centerItem)
+                                                val bodyBlocks = bigResults
+                                                    .filter { it.estimatedFontSize < titleThreshold }
+                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
 
-                                                val remaining = bigResults.toMutableList()
-                                                remaining.remove(centerItem)
-
-                                                // Sort the rest into the specific flow
-                                                smartResults.addAll(remaining.filter { it.rect.centerY() > imgCenterY && it.rect.centerX() <= imgCenterX }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))) // Bottom Left
-
-                                                smartResults.addAll(remaining.filter { it.rect.centerY() > imgCenterY && it.rect.centerX() > imgCenterX }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))) // Bottom Right
-
-                                                smartResults.addAll(remaining.filter { it.rect.centerY() <= imgCenterY && it.rect.centerX() <= imgCenterX }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))) // Top Left
-
-                                                smartResults.addAll(remaining.filter { it.rect.centerY() <= imgCenterY && it.rect.centerX() > imgCenterX }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))) // Top Right
+                                                (titleBlocks + bodyBlocks).toMutableList()
+                                            } else {
+                                                mutableListOf()
                                             }
 
                                             ocrResults = smartResults
 
                                             if (smartResults.isEmpty()) {
-                                                currentTextIndex = -1
                                                 speakUi("Tidak ada teks utama ditemukan", saveInHistory = false)
                                             } else {
-                                                currentTextIndex = 0
-                                                speakDetectedText(smartResults[0].text)
+                                                val fullText = smartResults.joinToString(" ") { it.text.trim() }
+                                                speakDetectedText(fullText)
                                             }
                                         },
                                         onComplete = { imageProxy.close() }
@@ -427,21 +447,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                         speakDetectedText(lastSpokenText, saveInHistory = false)
                                     } else {
                                         speakUi("Belum ada teks untuk diulang", saveInHistory = false)
-                                    }
-                                }
-                                // --- STRAIGHT RIGHT: NEXT TEXT ---
-                                "RIGHT" -> {
-                                    if (ocrResults.isNotEmpty()) {
-                                        currentTextIndex = (currentTextIndex + 1) % ocrResults.size
-                                        speakDetectedText(ocrResults[currentTextIndex].text)
-                                    }
-                                }
-                                // --- STRAIGHT LEFT: PREVIOUS TEXT ---
-                                "LEFT" -> {
-                                    if (ocrResults.isNotEmpty()) {
-                                        // The math smoothly wraps backward to the end of the array (Top Right)
-                                        currentTextIndex = (currentTextIndex - 1 + ocrResults.size) % ocrResults.size
-                                        speakDetectedText(ocrResults[currentTextIndex].text)
                                     }
                                 }
                                 // --- STRAIGHT UP: VOLUME UP ---

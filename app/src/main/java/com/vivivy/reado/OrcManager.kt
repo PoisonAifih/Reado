@@ -14,7 +14,11 @@ class OcrManager {
             .addOnSuccessListener { visionText ->
                 val results = visionText.textBlocks.mapNotNull { block ->
                     val rect = block.boundingBox
-                    if (rect != null) ScanResult(block.text, RectF(rect)) else null
+                    if (rect != null) {
+                        val lineCount = block.lines.size.coerceAtLeast(1)
+                        val fontSize = rect.height().toFloat() / lineCount
+                        ScanResult(block.text, RectF(rect), fontSize)
+                    } else null
                 }
                 onResult(results)
             }
