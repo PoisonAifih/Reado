@@ -2,6 +2,8 @@
 agp = "8.10.1"
 cameraCore = "1.3.1"
 kotlin = "2.0.21"
+wearable = "18.2.0"
+wearCompose = "1.4.0"
 coreKtx = "1.18.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -35,6 +37,9 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
 mlkit-language-id = { module = "com.google.mlkit:language-id", version.ref = "languageId" }
 language-id-common = { group = "com.google.mlkit", name = "language-id-common", version.ref = "languageIdCommon" }
+play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "wearable" }
+wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wearCompose" }
+wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wearCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

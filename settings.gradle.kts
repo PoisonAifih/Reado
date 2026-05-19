@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Reado"
 include(":app")
+include(":wear")
  

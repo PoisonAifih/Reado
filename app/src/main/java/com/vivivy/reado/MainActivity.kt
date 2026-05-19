@@ -47,6 +47,8 @@ import kotlin.math.max
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     companion object {
+        const val EXTRA_WATCH_COMMAND = "WATCH_COMMAND"
+
         private const val HELP_READ_ALOUD =
             "Panduan gestur Reado. Ketuk satu kali untuk jeda bacaan. " +
                 "Ketuk dua kali untuk memindai teks di depan kamera dan membaca semua teks sekaligus dari atas ke bawah, mendahulukan judul dan teks berukuran besar. " +
@@ -74,6 +76,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private var ocrResults by mutableStateOf<List<ScanResult>>(emptyList())
     private var capturedImageSize by mutableStateOf(Size.Zero)
     private var lastSpokenText: String = ""
+    private var pendingWatchCommand: String? = null
 
     @Volatile
     private var ttsReady = false
@@ -88,6 +91,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(this, this)
         cameraManager = CameraManager(this)
         ocrManager = OcrManager()
+
+        pendingWatchCommand = intent.getStringExtra(EXTRA_WATCH_COMMAND)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -172,6 +177,25 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra(EXTRA_WATCH_COMMAND)?.let { handleWatchCommand(it) }
+    }
+
+    private fun handleWatchCommand(command: String) {
+        when (command) {
+            "SCAN"        -> performScan()
+            "PAUSE"       -> speakUi("Jeda", saveInHistory = false)
+            "VOLUME_UP"   -> { adjustVolume(raise = true);  speakUi("Volume naik",  saveInHistory = false) }
+            "VOLUME_DOWN" -> { adjustVolume(raise = false); speakUi("Volume turun", saveInHistory = false) }
+            "BATTERY"     -> speakUi("Baterai ${getBatteryPercentage()} persen", saveInHistory = false)
+            "REPEAT"      -> {
+                if (lastSpokenText.isNotEmpty()) speakDetectedText(lastSpokenText, saveInHistory = false)
+                else speakUi("Belum ada teks untuk diulang", saveInHistory = false)
             }
         }
     }
@@ -311,119 +335,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { speakUi("Jeda", saveInHistory = false) },
-                        onDoubleTap = {
-                            speakUi("Memindai", saveInHistory = false)
-                            cameraManager.capturePhoto(
-                                onImageReady = { inputImage, correctSize, imageProxy ->
-                                    capturedImageSize = correctSize
-
-                                    ocrManager.processImage(
-                                        inputImage = inputImage,
-                                        onResult = { rawResults ->
-
-                                            // --- 1. CLUSTERING LOGIC ---
-                                            // Group blocks that are close to each other
-                                            val thresholdX = correctSize.width * 0.15f // 15% of width distance allowed
-                                            val thresholdY = correctSize.height * 0.10f // 10% of height distance allowed
-                                            val mergedResults = mutableListOf<ScanResult>()
-                                            val used = BooleanArray(rawResults.size)
-
-                                            for (i in rawResults.indices) {
-                                                if (used[i]) continue
-                                                val currentRect = RectF(rawResults[i].rect)
-                                                var currentText = rawResults[i].text
-                                                var currentFontSize = rawResults[i].estimatedFontSize
-                                                used[i] = true
-
-                                                var mergedAny = true
-                                                while (mergedAny) {
-                                                    mergedAny = false
-                                                    for (j in rawResults.indices) {
-                                                        if (used[j]) continue
-                                                        val otherRect = rawResults[j].rect
-
-                                                        // Calculate shortest distance between the two rectangles
-                                                        val dx = max(0f, max(currentRect.left - otherRect.right, otherRect.left - currentRect.right))
-                                                        val dy = max(0f, max(currentRect.top - otherRect.bottom, otherRect.top - currentRect.bottom))
-
-                                                        if (dx < thresholdX && dy < thresholdY) {
-                                                            // Combine text top-to-bottom
-                                                            if (otherRect.top < currentRect.top) {
-                                                                currentText = rawResults[j].text + " " + currentText
-                                                            } else {
-                                                                currentText = currentText + " " + rawResults[j].text
-                                                            }
-                                                            currentRect.union(otherRect)
-                                                            currentFontSize = max(currentFontSize, rawResults[j].estimatedFontSize)
-                                                            used[j] = true
-                                                            mergedAny = true
-                                                        }
-                                                    }
-                                                }
-                                                mergedResults.add(ScanResult(currentText, currentRect, currentFontSize))
-                                            }
-
-                                            // --- 2. FILTERING LOGIC ---
-                                            val imgWidth  = correctSize.width
-                                            val imgHeight = correctSize.height
-                                            val totalArea = imgWidth * imgHeight
-
-                                            // Scan zone: middle 80% horizontally, middle 70% vertically
-                                            val zoneLeft   = imgWidth  * 0.10f
-                                            val zoneRight  = imgWidth  * 0.90f
-                                            val zoneTop    = imgHeight * 0.15f
-                                            val zoneBottom = imgHeight * 0.85f
-
-                                            // Minimum font height to exclude small background text
-                                            val minFontSize = imgHeight * 0.018f
-
-                                            val bigResults = mergedResults.filter { result ->
-                                                val area = result.rect.width() * result.rect.height()
-                                                if (area <= totalArea * 0.005f) return@filter false
-
-                                                // Block center must be within the scan zone
-                                                val cx = result.rect.centerX()
-                                                val cy = result.rect.centerY()
-                                                if (cx < zoneLeft || cx > zoneRight || cy < zoneTop || cy > zoneBottom) return@filter false
-
-                                                // Ignore small background text
-                                                result.estimatedFontSize >= minFontSize
-                                            }
-
-                                            // --- 3. SMART READING ORDER ---
-                                            // Titles (large font) read first, then body text top-to-bottom
-                                            val smartResults = if (bigResults.isNotEmpty()) {
-                                                val maxFontSize = bigResults.maxOf { it.estimatedFontSize }
-                                                val titleThreshold = maxFontSize * 0.65f
-
-                                                val titleBlocks = bigResults
-                                                    .filter { it.estimatedFontSize >= titleThreshold }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
-
-                                                val bodyBlocks = bigResults
-                                                    .filter { it.estimatedFontSize < titleThreshold }
-                                                    .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
-
-                                                (titleBlocks + bodyBlocks).toMutableList()
-                                            } else {
-                                                mutableListOf()
-                                            }
-
-                                            ocrResults = smartResults
-
-                                            if (smartResults.isEmpty()) {
-                                                speakUi("Tidak ada teks utama ditemukan", saveInHistory = false)
-                                            } else {
-                                                val fullText = smartResults.joinToString(" ") { it.text.trim() }
-                                                speakDetectedText(fullText)
-                                            }
-                                        },
-                                        onComplete = { imageProxy.close() }
-                                    )
-                                },
-                                onError = { speakUi("Kamera error", saveInHistory = false) }
-                            )
-                        },
+                        onDoubleTap = { performScan() },
                         onLongPress = {
                             val battery = getBatteryPercentage()
                             speakUi("Baterai $battery persen", saveInHistory = false)
@@ -491,11 +403,116 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         )
     }
 
+    private fun performScan() {
+        if (cameraManager.imageCapture == null) {
+            speakUi("Kamera belum siap, coba lagi", saveInHistory = false)
+            return
+        }
+        speakUi("Memindai", saveInHistory = false)
+        cameraManager.capturePhoto(
+            onImageReady = { inputImage, correctSize, imageProxy ->
+                capturedImageSize = correctSize
+
+                ocrManager.processImage(
+                    inputImage = inputImage,
+                    onResult = { rawResults ->
+
+                        // --- 1. CLUSTERING LOGIC ---
+                        val thresholdX = correctSize.width * 0.15f
+                        val thresholdY = correctSize.height * 0.10f
+                        val mergedResults = mutableListOf<ScanResult>()
+                        val used = BooleanArray(rawResults.size)
+
+                        for (i in rawResults.indices) {
+                            if (used[i]) continue
+                            val currentRect = RectF(rawResults[i].rect)
+                            var currentText = rawResults[i].text
+                            var currentFontSize = rawResults[i].estimatedFontSize
+                            used[i] = true
+
+                            var mergedAny = true
+                            while (mergedAny) {
+                                mergedAny = false
+                                for (j in rawResults.indices) {
+                                    if (used[j]) continue
+                                    val otherRect = rawResults[j].rect
+                                    val dx = max(0f, max(currentRect.left - otherRect.right, otherRect.left - currentRect.right))
+                                    val dy = max(0f, max(currentRect.top - otherRect.bottom, otherRect.top - currentRect.bottom))
+                                    if (dx < thresholdX && dy < thresholdY) {
+                                        if (otherRect.top < currentRect.top) {
+                                            currentText = rawResults[j].text + " " + currentText
+                                        } else {
+                                            currentText = currentText + " " + rawResults[j].text
+                                        }
+                                        currentRect.union(otherRect)
+                                        currentFontSize = max(currentFontSize, rawResults[j].estimatedFontSize)
+                                        used[j] = true
+                                        mergedAny = true
+                                    }
+                                }
+                            }
+                            mergedResults.add(ScanResult(currentText, currentRect, currentFontSize))
+                        }
+
+                        // --- 2. FILTERING LOGIC ---
+                        val imgWidth  = correctSize.width
+                        val imgHeight = correctSize.height
+                        val totalArea = imgWidth * imgHeight
+                        val zoneLeft   = imgWidth  * 0.10f
+                        val zoneRight  = imgWidth  * 0.90f
+                        val zoneTop    = imgHeight * 0.15f
+                        val zoneBottom = imgHeight * 0.85f
+                        val minFontSize = imgHeight * 0.018f
+
+                        val bigResults = mergedResults.filter { result ->
+                            val area = result.rect.width() * result.rect.height()
+                            if (area <= totalArea * 0.005f) return@filter false
+                            val cx = result.rect.centerX()
+                            val cy = result.rect.centerY()
+                            if (cx < zoneLeft || cx > zoneRight || cy < zoneTop || cy > zoneBottom) return@filter false
+                            result.estimatedFontSize >= minFontSize
+                        }
+
+                        // --- 3. SMART READING ORDER ---
+                        val smartResults = if (bigResults.isNotEmpty()) {
+                            val maxFontSize = bigResults.maxOf { it.estimatedFontSize }
+                            val titleThreshold = maxFontSize * 0.65f
+                            val titleBlocks = bigResults
+                                .filter { it.estimatedFontSize >= titleThreshold }
+                                .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
+                            val bodyBlocks = bigResults
+                                .filter { it.estimatedFontSize < titleThreshold }
+                                .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
+                            (titleBlocks + bodyBlocks).toMutableList()
+                        } else {
+                            mutableListOf()
+                        }
+
+                        ocrResults = smartResults
+
+                        if (smartResults.isEmpty()) {
+                            speakUi("Tidak ada teks utama ditemukan", saveInHistory = false)
+                        } else {
+                            val fullText = smartResults.joinToString(" ") { it.text.trim() }
+                            speakDetectedText(fullText)
+                        }
+                    },
+                    onComplete = { imageProxy.close() }
+                )
+            },
+            onError = { speakUi("Kamera error", saveInHistory = false) }
+        )
+    }
+
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
             ttsReady = true
             speakUi("Reado Siap")
+            pendingWatchCommand?.let { cmd ->
+                pendingWatchCommand = null
+                handleWatchCommand(cmd)
+            }
         }
     }
 

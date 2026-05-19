@@ -65,4 +65,7 @@ dependencies {
 
     implementation(libs.text.recognition)
     implementation(libs.mlkit.language.id)
+
+    implementation(libs.play.services.wearable)
+    wearApp(project(":wear"))
 }
