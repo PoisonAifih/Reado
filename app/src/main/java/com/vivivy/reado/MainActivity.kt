@@ -98,6 +98,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
+        WearSyncHelper.openWatchApp(this)
+
         setContent {
             MaterialTheme {
                 var showAccDialog by remember { mutableStateOf(!isAccessibilityServiceEnabled(this@MainActivity)) }
@@ -183,7 +185,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         intent.getStringExtra(EXTRA_WATCH_COMMAND)?.let { handleWatchCommand(it) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        WearSyncHelper.openWatchApp(this)
     }
 
     private fun handleWatchCommand(command: String) {

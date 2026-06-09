@@ -36,10 +36,19 @@ class WearMainActivity : ComponentActivity() {
     @Composable
     fun WearApp() {
         var statusText by remember { mutableStateOf("Siap") }
+        var phoneConnected by remember { mutableStateOf(false) }
         val gestureSequence = remember { mutableStateListOf<String>() }
         var segmentX by remember { mutableStateOf(0f) }
         var segmentY by remember { mutableStateOf(0f) }
         val threshold = 70f
+
+        LaunchedEffect(Unit) {
+            Wearable.getNodeClient(this@WearMainActivity).connectedNodes
+                .addOnSuccessListener { nodes ->
+                    phoneConnected = nodes.isNotEmpty()
+                    Log.d("WearReado", "HP terhubung: ${nodes.size}")
+                }
+        }
 
         MaterialTheme {
             Box(
@@ -124,6 +133,13 @@ class WearMainActivity : ComponentActivity() {
                         text = statusText,
                         color = Color.Cyan,
                         fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (phoneConnected) "HP terhubung" else "HP tidak ditemukan",
+                        color = if (phoneConnected) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                        fontSize = 11.sp,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))

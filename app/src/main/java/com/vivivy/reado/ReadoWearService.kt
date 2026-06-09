@@ -8,7 +8,7 @@ import com.google.android.gms.wearable.WearableListenerService
 class ReadoWearService : WearableListenerService() {
 
     override fun onMessageReceived(event: MessageEvent) {
-        if (event.path != "/reado/gesture") return
+        if (event.path != WearSyncHelper.PATH_WATCH) return
 
         val command = String(event.data)
         Log.d("ReadoWear", "Perintah diterima dari jam: $command")
