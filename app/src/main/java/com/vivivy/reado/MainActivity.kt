@@ -1,10 +1,10 @@
 package com.vivivy.reado
 
+import android.content.pm.ActivityInfo
 import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.RectF
 import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Bundle
@@ -49,6 +49,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     companion object {
         const val EXTRA_WATCH_COMMAND = "WATCH_COMMAND"
 
+        private const val STATE_SCAN_MODE = "scan_mode"
+        private const val STATE_MODE_ANNOUNCEMENT = "mode_announcement"
+
         private const val HELP_READ_ALOUD =
             "Panduan gestur Reado. Ketuk satu kali untuk jeda bacaan. " +
                 "Ketuk dua kali untuk memindai teks di depan kamera dan membaca semua teks sekaligus dari atas ke bawah, mendahulukan judul dan teks berukuran besar. " +
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             """
             Ketuk 1x — Jeda bacaan
             Ketuk 2x — Pindai & baca semua teks sekaligus (judul besar dibaca duluan, lalu atas ke bawah)
+            Mode Buku (kiri atas) — Landscape dua halaman buku, baca kiri lalu kanan
             Tekan lama — Baca persen baterai
             Usap atas — Volume naik
             Usap bawah — Volume turun
@@ -75,8 +79,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private var ocrResults by mutableStateOf<List<ScanResult>>(emptyList())
     private var capturedImageSize by mutableStateOf(Size.Zero)
+    private var scanMode by mutableStateOf(ScanMode.PORTRAIT)
     private var lastSpokenText: String = ""
     private var pendingWatchCommand: String? = null
+    private var pendingModeAnnouncement: String? = null
+    private var shouldSpeakWelcome = true
 
     @Volatile
     private var ttsReady = false
@@ -93,6 +100,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         ocrManager = OcrManager()
 
         pendingWatchCommand = intent.getStringExtra(EXTRA_WATCH_COMMAND)
+
+        savedInstanceState?.let { state ->
+            scanMode = ScanMode.valueOf(state.getString(STATE_SCAN_MODE, ScanMode.PORTRAIT.name))
+            pendingModeAnnouncement = state.getString(STATE_MODE_ANNOUNCEMENT)
+            shouldSpeakWelcome = false
+            applyOrientationForMode(scanMode)
+        }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -117,17 +131,37 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
+                    val previewModifier = if (scanMode == ScanMode.BOOK) {
+                        Modifier
+                            .fillMaxWidth(0.95f)
+                            .fillMaxHeight(0.88f)
+                    } else {
+                        Modifier
                             .fillMaxWidth()
                             .fillMaxHeight(0.75f)
+                    }
+
+                    Box(
+                        modifier = previewModifier
                             .clip(RoundedCornerShape(16.dp))
                     ) {
                         CameraPreview()
-                        ResultOverlay()
+                        ResultOverlay(scanMode)
                     }
 
                     GesturePad(modifier = Modifier.fillMaxSize())
+
+                    TextButton(
+                        onClick = { toggleReadingMode() },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = if (scanMode == ScanMode.BOOK) "Mode Buku ✓" else "Mode Buku",
+                            color = if (scanMode == ScanMode.BOOK) Color.Cyan else Color.White
+                        )
+                    }
 
                     TextButton(
                         onClick = { showHelp = true },
@@ -208,6 +242,40 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_SCAN_MODE, scanMode.name)
+        pendingModeAnnouncement?.let { outState.putString(STATE_MODE_ANNOUNCEMENT, it) }
+    }
+
+    private fun toggleReadingMode() {
+        val enableBook = scanMode != ScanMode.BOOK
+        scanMode = if (enableBook) ScanMode.BOOK else ScanMode.PORTRAIT
+        applyOrientationForMode(scanMode)
+        ocrResults = emptyList()
+        capturedImageSize = Size.Zero
+
+        val message = if (enableBook) "Mode buku aktif" else "Mode portrait aktif"
+        pendingModeAnnouncement = message
+        shouldSpeakWelcome = false
+        announceModeChange()
+    }
+
+    private fun applyOrientationForMode(mode: ScanMode) {
+        requestedOrientation = if (mode == ScanMode.BOOK) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    private fun announceModeChange() {
+        val message = pendingModeAnnouncement ?: return
+        if (!ttsReady) return
+        speakUi(message, saveInHistory = false)
+        pendingModeAnnouncement = null
+    }
+
     private fun isAccessibilityServiceEnabled(context: Context): Boolean {
         val expectedComponentName = android.content.ComponentName(context, AccService::class.java)
         val enabledServicesSetting = android.provider.Settings.Secure.getString(
@@ -279,29 +347,47 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     }
 
     @Composable
-    fun ResultOverlay() {
+    fun ResultOverlay(mode: ScanMode) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // Scan zone corner markers — shows where OCR will focus
-            val zoneLeft   = size.width  * 0.10f
-            val zoneTop    = size.height * 0.15f
-            val zoneRight  = size.width  * 0.90f
-            val zoneBottom = size.height * 0.85f
-            val cornerLen  = 50f
+            val zones = ScanModeConfig.zonesFor(mode)
+            val cornerLen = 40f
             val guideColor = Color.White.copy(alpha = 0.85f)
-            val strokeW    = 5f
+            val strokeW = 5f
 
-            // Top-left
-            drawLine(guideColor, Offset(zoneLeft, zoneTop + cornerLen), Offset(zoneLeft, zoneTop), strokeWidth = strokeW)
-            drawLine(guideColor, Offset(zoneLeft, zoneTop), Offset(zoneLeft + cornerLen, zoneTop), strokeWidth = strokeW)
-            // Top-right
-            drawLine(guideColor, Offset(zoneRight - cornerLen, zoneTop), Offset(zoneRight, zoneTop), strokeWidth = strokeW)
-            drawLine(guideColor, Offset(zoneRight, zoneTop), Offset(zoneRight, zoneTop + cornerLen), strokeWidth = strokeW)
-            // Bottom-left
-            drawLine(guideColor, Offset(zoneLeft, zoneBottom - cornerLen), Offset(zoneLeft, zoneBottom), strokeWidth = strokeW)
-            drawLine(guideColor, Offset(zoneLeft, zoneBottom), Offset(zoneLeft + cornerLen, zoneBottom), strokeWidth = strokeW)
-            // Bottom-right
-            drawLine(guideColor, Offset(zoneRight - cornerLen, zoneBottom), Offset(zoneRight, zoneBottom), strokeWidth = strokeW)
-            drawLine(guideColor, Offset(zoneRight, zoneBottom), Offset(zoneRight, zoneBottom - cornerLen), strokeWidth = strokeW)
+            zones.forEach { zone ->
+                val zLeft = zone.left * size.width
+                val zTop = zone.top * size.height
+                val zRight = zone.right * size.width
+                val zBottom = zone.bottom * size.height
+
+                if (mode == ScanMode.BOOK) {
+                    drawRect(
+                        color = guideColor.copy(alpha = 0.55f),
+                        topLeft = Offset(zLeft, zTop),
+                        size = Size(zRight - zLeft, zBottom - zTop),
+                        style = Stroke(width = strokeW)
+                    )
+                } else {
+                    drawLine(guideColor, Offset(zLeft, zTop + cornerLen), Offset(zLeft, zTop), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zLeft, zTop), Offset(zLeft + cornerLen, zTop), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zRight - cornerLen, zTop), Offset(zRight, zTop), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zRight, zTop), Offset(zRight, zTop + cornerLen), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zLeft, zBottom - cornerLen), Offset(zLeft, zBottom), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zLeft, zBottom), Offset(zLeft + cornerLen, zBottom), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zRight - cornerLen, zBottom), Offset(zRight, zBottom), strokeWidth = strokeW)
+                    drawLine(guideColor, Offset(zRight, zBottom), Offset(zRight, zBottom - cornerLen), strokeWidth = strokeW)
+                }
+            }
+
+            if (mode == ScanMode.BOOK) {
+                val midX = size.width / 2f
+                drawLine(
+                    color = guideColor.copy(alpha = 0.4f),
+                    start = Offset(midX, size.height * 0.10f),
+                    end = Offset(midX, size.height * 0.90f),
+                    strokeWidth = 2f
+                )
+            }
 
             if (capturedImageSize == Size.Zero || ocrResults.isEmpty()) return@Canvas
 
@@ -424,82 +510,23 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 ocrManager.processImage(
                     inputImage = inputImage,
                     onResult = { rawResults ->
-
-                        // --- 1. CLUSTERING LOGIC ---
-                        val thresholdX = correctSize.width * 0.15f
-                        val thresholdY = correctSize.height * 0.10f
-                        val mergedResults = mutableListOf<ScanResult>()
-                        val used = BooleanArray(rawResults.size)
-
-                        for (i in rawResults.indices) {
-                            if (used[i]) continue
-                            val currentRect = RectF(rawResults[i].rect)
-                            var currentText = rawResults[i].text
-                            var currentFontSize = rawResults[i].estimatedFontSize
-                            used[i] = true
-
-                            var mergedAny = true
-                            while (mergedAny) {
-                                mergedAny = false
-                                for (j in rawResults.indices) {
-                                    if (used[j]) continue
-                                    val otherRect = rawResults[j].rect
-                                    val dx = max(0f, max(currentRect.left - otherRect.right, otherRect.left - currentRect.right))
-                                    val dy = max(0f, max(currentRect.top - otherRect.bottom, otherRect.top - currentRect.bottom))
-                                    if (dx < thresholdX && dy < thresholdY) {
-                                        if (otherRect.top < currentRect.top) {
-                                            currentText = rawResults[j].text + " " + currentText
-                                        } else {
-                                            currentText = currentText + " " + rawResults[j].text
-                                        }
-                                        currentRect.union(otherRect)
-                                        currentFontSize = max(currentFontSize, rawResults[j].estimatedFontSize)
-                                        used[j] = true
-                                        mergedAny = true
-                                    }
-                                }
-                            }
-                            mergedResults.add(ScanResult(currentText, currentRect, currentFontSize))
+                        if (rawResults.isEmpty()) {
+                            ocrResults = emptyList()
+                            speakUi("Tidak ada teks terdeteksi, coba dekatkan kamera", saveInHistory = false)
+                            return@processImage
                         }
 
-                        // --- 2. FILTERING LOGIC ---
-                        val imgWidth  = correctSize.width
-                        val imgHeight = correctSize.height
-                        val totalArea = imgWidth * imgHeight
-                        val zoneLeft   = imgWidth  * 0.10f
-                        val zoneRight  = imgWidth  * 0.90f
-                        val zoneTop    = imgHeight * 0.15f
-                        val zoneBottom = imgHeight * 0.85f
-                        val minFontSize = imgHeight * 0.018f
-
-                        val bigResults = mergedResults.filter { result ->
-                            val area = result.rect.width() * result.rect.height()
-                            if (area <= totalArea * 0.005f) return@filter false
-                            val cx = result.rect.centerX()
-                            val cy = result.rect.centerY()
-                            if (cx < zoneLeft || cx > zoneRight || cy < zoneTop || cy > zoneBottom) return@filter false
-                            result.estimatedFontSize >= minFontSize
-                        }
-
-                        // --- 3. SMART READING ORDER ---
-                        val smartResults = if (bigResults.isNotEmpty()) {
-                            val maxFontSize = bigResults.maxOf { it.estimatedFontSize }
-                            val titleThreshold = maxFontSize * 0.65f
-                            val titleBlocks = bigResults
-                                .filter { it.estimatedFontSize >= titleThreshold }
-                                .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
-                            val bodyBlocks = bigResults
-                                .filter { it.estimatedFontSize < titleThreshold }
-                                .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
-                            (titleBlocks + bodyBlocks).toMutableList()
-                        } else {
-                            mutableListOf()
-                        }
+                        val smartResults = ScanProcessor.process(
+                            rawResults = rawResults,
+                            imgWidth = correctSize.width,
+                            imgHeight = correctSize.height,
+                            mode = scanMode
+                        )
 
                         ocrResults = smartResults
 
                         if (smartResults.isEmpty()) {
-                            speakUi("Tidak ada teks utama ditemukan", saveInHistory = false)
+                            speakUi("Teks terlalu kecil atau di luar area scan, sesuaikan posisi", saveInHistory = false)
                         } else {
                             val fullText = smartResults.joinToString(" ") { it.text.trim() }
                             speakDetectedText(fullText)
@@ -516,7 +543,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (status == TextToSpeech.SUCCESS) {
             TtsLanguageHelper.applyLocaleToTts(tts, TtsLanguageHelper.uiLocale)
             ttsReady = true
-            speakUi("Reado Siap")
+            when {
+                pendingModeAnnouncement != null -> announceModeChange()
+                shouldSpeakWelcome -> speakUi("Reado Siap")
+            }
             pendingWatchCommand?.let { cmd ->
                 pendingWatchCommand = null
                 handleWatchCommand(cmd)
