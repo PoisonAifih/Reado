@@ -21,7 +21,6 @@
         android:debuggable="true"
         android:extractNativeLibs="false"
         android:label="Reado"
-        android:testOnly="true"
         android:theme="@android:style/Theme.DeviceDefault" >
         <meta-data
             android:name="com.google.android.wearable.standalone"
