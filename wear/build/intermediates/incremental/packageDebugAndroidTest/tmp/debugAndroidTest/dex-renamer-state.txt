@@ -1,0 +1,4 @@
+#Wed Jun 17 10:44:33 WIB 2026
+base.0=E\:\\Binus\\Sem4\\Reado\\wear\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
+path.0=0/classes.dex
+renamed.0=classes.dex

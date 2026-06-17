@@ -1,0 +1,4 @@
+com.vivivy.reado.test.wear-androidTest-0 E:\Binus\Sem4\Reado\wear\build\generated\res\resValues\androidTest\debug
+com.vivivy.reado.test.wear-mergeDebugAndroidTestResources-1 E:\Binus\Sem4\Reado\wear\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.vivivy.reado.test.wear-mergeDebugAndroidTestResources-2 E:\Binus\Sem4\Reado\wear\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.vivivy.reado.test.wear-debugAndroidTest-3 E:\Binus\Sem4\Reado\wear\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

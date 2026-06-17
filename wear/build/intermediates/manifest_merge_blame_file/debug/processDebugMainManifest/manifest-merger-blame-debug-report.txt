@@ -31,149 +31,148 @@
 22        android:extractNativeLibs="false"
 23        android:label="Reado"
 23-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:7:9-30
-24        android:testOnly="true"
-25        android:theme="@android:style/Theme.DeviceDefault" >
-25-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:8:9-59
-26        <meta-data
-26-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:10:9-12:37
-27            android:name="com.google.android.wearable.standalone"
-27-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:11:13-66
-28            android:value="false" />
-28-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:12:13-34
-29
-30        <activity
-30-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:14:9-23:20
-31            android:name="com.vivivy.reado.WearMainActivity"
-31-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:15:13-45
-32            android:exported="true"
-32-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:16:13-36
-33            android:launchMode="singleTop"
-33-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:17:13-43
-34            android:taskAffinity="" >
-34-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:18:13-36
-35            <intent-filter>
-35-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:19:13-22:29
-36                <action android:name="android.intent.action.MAIN" />
-36-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:20:17-69
-36-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:20:25-66
-37
-38                <category android:name="android.intent.category.LAUNCHER" />
-38-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:21:17-77
-38-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:21:27-74
-39            </intent-filter>
-40        </activity>
-41
-42        <service
-42-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:25:9-35:19
-43            android:name="com.vivivy.reado.ReadoWearListenerService"
-43-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:26:13-53
-44            android:exported="true" >
-44-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:27:13-36
-45            <intent-filter>
-45-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:28:13-34:29
-46                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-46-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:29:17-91
-46-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:29:25-88
-47
-48                <data
-48-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:30:17-33:57
-49                    android:host="*"
-49-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:32:21-37
-50                    android:pathPrefix="/reado/phone"
-50-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:33:21-54
-51                    android:scheme="wear" />
-51-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:31:21-42
-52            </intent-filter>
-53        </service>
-54
-55        <activity
-55-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
-56            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-56-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
-57            android:exported="false"
-57-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
-58            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-58-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
-59
-60        <meta-data
-60-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
-61            android:name="com.google.android.gms.version"
-61-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
-62            android:value="@integer/google_play_services_version" />
-62-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
-63
-64        <uses-library
-64-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:23:9-25:40
-65            android:name="wear-sdk"
-65-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:24:13-36
-66            android:required="false" />
-66-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:25:13-37
-67
-68        <provider
-68-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
-69            android:name="androidx.startup.InitializationProvider"
-69-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
-70            android:authorities="com.vivivy.reado.androidx-startup"
-70-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
-71            android:exported="false" >
-71-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
-72            <meta-data
-72-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
-73                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-73-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
-74                android:value="androidx.startup" />
-74-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
-75            <meta-data
-75-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:29:13-31:52
-76                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-76-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:30:17-78
-77                android:value="androidx.startup" />
-77-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:31:17-49
-78            <meta-data
-78-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
-79                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-79-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
-80                android:value="androidx.startup" />
-80-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
-81        </provider>
-82
-83        <receiver
-83-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
-84            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-84-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
-85            android:directBootAware="false"
-85-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
-86            android:enabled="true"
-86-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
-87            android:exported="true"
-87-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
-88            android:permission="android.permission.DUMP" >
-88-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
-89            <intent-filter>
-89-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
-90                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-90-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
-90-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
-91            </intent-filter>
-92            <intent-filter>
-92-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
-93                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-93-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
-93-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
-94            </intent-filter>
-95            <intent-filter>
-95-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
-96                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-96-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
-96-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
-97            </intent-filter>
-98            <intent-filter>
-98-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
-99                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-99-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
-99-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
-100            </intent-filter>
-101        </receiver>
-102    </application>
-103
-104</manifest>
+24        android:theme="@android:style/Theme.DeviceDefault" >
+24-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:8:9-59
+25        <meta-data
+25-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:10:9-12:37
+26            android:name="com.google.android.wearable.standalone"
+26-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:11:13-66
+27            android:value="false" />
+27-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:12:13-34
+28
+29        <activity
+29-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:14:9-23:20
+30            android:name="com.vivivy.reado.WearMainActivity"
+30-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:15:13-45
+31            android:exported="true"
+31-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:16:13-36
+32            android:launchMode="singleTop"
+32-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:17:13-43
+33            android:taskAffinity="" >
+33-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:18:13-36
+34            <intent-filter>
+34-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:19:13-22:29
+35                <action android:name="android.intent.action.MAIN" />
+35-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:20:17-69
+35-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:20:25-66
+36
+37                <category android:name="android.intent.category.LAUNCHER" />
+37-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:21:17-77
+37-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:21:27-74
+38            </intent-filter>
+39        </activity>
+40
+41        <service
+41-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:25:9-35:19
+42            android:name="com.vivivy.reado.ReadoWearListenerService"
+42-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:26:13-53
+43            android:exported="true" >
+43-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:27:13-36
+44            <intent-filter>
+44-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:28:13-34:29
+45                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+45-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:29:17-91
+45-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:29:25-88
+46
+47                <data
+47-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:30:17-33:57
+48                    android:host="*"
+48-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:32:21-37
+49                    android:pathPrefix="/reado/phone"
+49-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:33:21-54
+50                    android:scheme="wear" />
+50-->E:\Binus\Sem4\Reado\wear\src\main\AndroidManifest.xml:31:21-42
+51            </intent-filter>
+52        </service>
+53
+54        <activity
+54-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+55            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+55-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+56            android:exported="false"
+56-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+57            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+57-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\e5bd833343a6a156f3212a49a4ac05dd\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+58
+59        <meta-data
+59-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+60            android:name="com.google.android.gms.version"
+60-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+61            android:value="@integer/google_play_services_version" />
+61-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bfb3269d6c80d7f45794042bca8466d7\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+62
+63        <uses-library
+63-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:23:9-25:40
+64            android:name="wear-sdk"
+64-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:24:13-36
+65            android:required="false" />
+65-->[androidx.wear.compose:compose-foundation:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\4f4d31b42f65c1224bed7baed708a037\transformed\compose-foundation-1.4.0\AndroidManifest.xml:25:13-37
+66
+67        <provider
+67-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+68            android:name="androidx.startup.InitializationProvider"
+68-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+69            android:authorities="com.vivivy.reado.androidx-startup"
+69-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+70            android:exported="false" >
+70-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+71            <meta-data
+71-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+72                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+72-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+73                android:value="androidx.startup" />
+73-->[androidx.emoji2:emoji2:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\bcbd4db496f25771683428f02de6f26a\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+74            <meta-data
+74-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:29:13-31:52
+75                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+75-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:30:17-78
+76                android:value="androidx.startup" />
+76-->[androidx.lifecycle:lifecycle-process:2.9.4] C:\Users\USER\.gradle\caches\8.11.1\transforms\ce64d9c4fd7b285dcab43321903f4e87\transformed\lifecycle-process-2.9.4\AndroidManifest.xml:31:17-49
+77            <meta-data
+77-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+78                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+78-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+79                android:value="androidx.startup" />
+79-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+80        </provider>
+81
+82        <receiver
+82-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+83            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+83-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+84            android:directBootAware="false"
+84-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+85            android:enabled="true"
+85-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+86            android:exported="true"
+86-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+87            android:permission="android.permission.DUMP" >
+87-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+88            <intent-filter>
+88-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+89                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+89-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+89-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+90            </intent-filter>
+91            <intent-filter>
+91-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+92                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+93            </intent-filter>
+94            <intent-filter>
+94-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+95                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+95-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+95-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+96            </intent-filter>
+97            <intent-filter>
+97-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+98                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\USER\.gradle\caches\8.11.1\transforms\22e5d8ae8960e3279f493a9d3b4c7165\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+99            </intent-filter>
+100        </receiver>
+101    </application>
+102
+103</manifest>
